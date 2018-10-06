@@ -1,9 +1,14 @@
 function $(selector) {
-    return document.querySelector(selector);
+  return document.querySelector(selector);
 }
 
-function appendAnswer({content, writer, date, answerId}) {
-    const commentHTML = `
+function appendAnswer({
+  content,
+  writer,
+  date,
+  answerId
+}) {
+  const commentHTML = `
     <li class="answer" data-id=${answerId}>
         <div class="answer-content"> ${content} </div>
         <div class="answer-metainfo">
@@ -15,14 +20,14 @@ function appendAnswer({content, writer, date, answerId}) {
         </div>
     </li> `
 
-    return commentHTML;
+  return commentHTML;
 }
 
 
 function initEvents() {
-    //이벤트등록
+  //이벤트등록
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    initEvents();
+  initEvents();
 })
