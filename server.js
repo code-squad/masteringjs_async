@@ -4,15 +4,16 @@ const bodyParser = require('body-parser')
 const shortid = require('shortid')
 const session = require('express-session')
 
-
 app.listen(3000, function() {
   console.log("start, express server on port 3000");
 });
 
 app.use(express.static('public'))
+
 app.use(bodyParser.urlencoded({
   extended: false
 }))
+
 app.use(session({
   resave: false,
   saveUninitialized: true,
@@ -48,10 +49,8 @@ app.post('/api/logging', jsonParser, function(req, res) {
   })
 });
 
-
 app.post('/api/questions/:questionid/answers', jsonParser, function(req, res) {
   if (!req.session.userid) res.status(401)
-
   const questionId = req.params.questionid;
   const body = req.body;
   if (!body) res.json({

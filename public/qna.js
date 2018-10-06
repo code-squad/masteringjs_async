@@ -10,14 +10,14 @@ function appendAnswer({
 }) {
   const commentHTML = `
     <li class="answer" data-id=${answerId}>
-        <div class="answer-content"> ${content} </div>
-        <div class="answer-metainfo">
-            <div class="answer-id">${writer.id}</div>
-            <div class="answer-date">${date}</div>
-            <div class="answer-util">
-                <a class="answer-delete" href="/api/questions/2/answers/${answerId}">삭제</a>
-            </div>
+      <div class="answer-content"> ${content} </div>
+      <div class="answer-metainfo">
+        <div class="answer-id">${writer.id}</div>
+        <div class="answer-date">${date}</div>
+        <div class="answer-util">
+          <a class="answer-delete" href="/api/questions/2/answers/${answerId}">삭제</a>
         </div>
+      </div>
     </li> `
 
   return commentHTML;
