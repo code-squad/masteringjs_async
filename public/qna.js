@@ -20,75 +20,86 @@ function appendAnswer({content, writer, date, answerId}) {
     return commentHTML;
 }
 
-// 로그아웃 이벤트 리스너
-function logoutListener(evt) {
-    const loginButtonEl = evt.currentTarget;
+const REST = {
+    get: (url) => {
+        return fetchManager(url, 'GET', null);
+    },
 
-    const myHeaders = new Headers();
-    myHeaders.append('Accept', 'application/json');
-    myHeaders.append('Content-Type', 'application/json');
+    post: (url, body) => {
+        return fetchManager(url, 'POST', body);
+    },
 
-    const myInit = {
-        method: 'DELETE',
-        headers: myHeaders,
-        body: JSON.stringify( {command:'deletesession'})
-    };
+    put: (url, body) => {
+        return fetchManager(url, 'PUT', body);
+    },
 
-    fetch('/api/session', myInit).then((res) => {
-        if(res.ok) {
-            return res.json();
-        }
-        throw 'fail logout!!';
-    }).then((json) => {
-        if(json.result === 'ok') {
-            loginButtonEl.innerText = 'LOGIN';
-            loginButtonEl.removeEventListener('click', logoutListener);
-            loginButtonEl.addEventListener('click', loginListener);
-            return false;
-        }
-        throw 'fail logout!!';
-    }).catch((err) => {
-        alert(err.message);
-    });
+    del: (url, body) => {
+        return fetchManager(url, 'DELETE', body);
+    }
 };
 
-function loginListener(evt) {
-    const loginButtonEl = evt.currentTarget;
-
-    const myHeaders = new Headers();
-    myHeaders.append('Accept', 'application/json');
-    myHeaders.append('Content-Type', 'application/json');
+function fetchManager(url, method, body) {
+    const headers = new Headers();
+    headers.append('Accept', 'application/json');
+    headers.append('Content-Type', 'application/json');
 
     const myInit = {
-        method: 'POST',
-        headers: myHeaders,
-        body: JSON.stringify({user: 'jjori.master'})
+        method: method,
+        headers: headers,
+        body: JSON.stringify(body)
     };
 
-    fetch('/api/login', myInit).then((res) => {
-        if(res.ok) {
+    return fetch(url, myInit).then((res) => {
+        if (res.ok) {
             return res.json();
         }
-        throw 'fail login!!';
+        throw 'response is not ok!!';
+    });
+}
+
+// 로그아웃 이벤트 리스너
+function logoutListener(evt) {
+    REST.del('/api/session', {
+        command: 'deletesession'
     }).then((json) => {
-        if(json.login === 'ok') {
-            loginButtonEl.innerText = 'LOGOUT';
-            loginButtonEl.removeEventListener('click', loginListener);
-            loginButtonEl.addEventListener('click', logoutListener);
+        if (json.result === 'ok') {
+            evt.target.innerText = 'LOGIN';
+            evt.target.removeEventListener('click', logoutListener);
+            evt.target.addEventListener('click', loginListener);
             return false;
         }
-        throw 'fail login!!';
+
+        throw '로그아웃 실패!!';
     }).catch((err) => {
-        alert(err.description);
+        console.error(err.message);
+        alert('로그아웃에 실패하였습니다.');
+    });
+}
+
+// 로그인 이벤트 리스너
+function loginListener(evt) {
+    REST.post('/api/login', {
+        user: 'jjori.master'
+    }).then((json) => {
+        if (json.login === 'ok') {
+            evt.target.innerText = 'LOGOUT';
+            evt.target.removeEventListener('click', loginListener);
+            evt.target.addEventListener('click', logoutListener);
+            return false;
+        }
+
+        throw '로그인 실패!! json result is ' + json.result;
+    }).catch((err) => {
+        console.error(err.message);
+        alert('로그인에 실패하였습니다.');
     });
 }
 
 function initEvents() {
     //이벤트등록
 
-    // 세션 상태 확인??
-    const loginButtonEl = document.querySelector('header .login-btn');
-    loginButtonEl.addEventListener('click', loginListener);
+    // 로그인 이벤트 리스너 등록
+    $('header .login-btn').addEventListener('click', loginListener);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
