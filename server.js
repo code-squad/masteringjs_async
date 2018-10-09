@@ -9,6 +9,11 @@ app.listen(3000, function() {
 	console.log("start, express server on port 3000");
 });
 
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "http://127.0.0.1:8080");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+})
 app.use(express.static('public'))
 app.use(bodyParser.urlencoded({extended:false}))
 app.use(session({
@@ -19,7 +24,6 @@ app.use(session({
 }))
 
 const jsonParser = bodyParser.json()
-
 //Routing
 app.post('/api/login', jsonParser,  function(req, res){
     const user  = req.body.user;
