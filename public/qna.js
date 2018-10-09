@@ -1,5 +1,7 @@
 'use strict';
 
+const API_LOGGING_URL = '/api/logging';
+
 class RestError extends Error {
     constructor(status, message) {
         super(message);
@@ -70,6 +72,9 @@ function fetchManager(url, method, body) {
 
     return fetch(url, myInit).then((res) => {
         if (res.ok) {
+            if(url !== API_LOGGING_URL) {
+                asyncLogging(url, method, body).then();
+            }
             return res.json();
         }
 
@@ -99,6 +104,9 @@ async function fetchManagerAsync(url, method, body) {
 
     const res = await fetch(url, myInit);
     if (res.ok) {
+        if(url !== API_LOGGING_URL) {
+            await asyncLogging(url, method, body);
+        }
         return await res.json();
     }
 
@@ -132,7 +140,19 @@ const AsyncREST = {
     }
 };
 
-
+async function asyncLogging(url, method, body) {
+    try {
+        await AsyncREST.post(API_LOGGING_URL, {
+            logType: {
+                url: url,
+                method: method,
+                body: body
+            }
+        });
+    } catch(err) {
+        errorHandler(err);
+    }
+}
 
 // 로그아웃 이벤트 리스너
 function logoutListener(evt) {
