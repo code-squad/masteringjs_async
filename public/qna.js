@@ -1,6 +1,7 @@
 'use strict';
 
 const API_LOGGING_URL = '/api/logging';
+const ANSWER_DELETE_BUTTON_EL_NAME = 'btn-answer-delete';
 
 class RestError extends Error {
     constructor(status, message) {
@@ -25,6 +26,7 @@ function errorHandler(err) {
 }
 
 function appendAnswer({content, writer, date, answerId}) {
+
     // noinspection UnnecessaryLocalVariableJS
     const commentHTML = `
     <li class="answer" data-id=${answerId}>
@@ -33,7 +35,7 @@ function appendAnswer({content, writer, date, answerId}) {
             <div class="answer-id">${writer.id}</div>
             <div class="answer-date">${date}</div>
             <div class="answer-util">
-                <a class="answer-delete" href="/api/questions/2/answers/${answerId}">삭제</a>
+                <button name="btn-answer-delete" class="answer-delete">삭제</button>
             </div>
         </div>
     </li> `;
@@ -186,6 +188,16 @@ function loginListener(evt) {
     }).catch((errorHandler));
 }
 
+const answers = [];
+function resetAnswerList() {
+    // noinspection UnnecessaryLocalVariableJS
+    const answersHtml = answers.map((answer) => {
+        return appendAnswer(answer);
+    }).join('');
+
+    $('ul.answers').innerHTML = answersHtml;
+}
+
 // 답글 달기 로그인상태가 아닐경우 status 401반환
 function answerListener() {
     const contentEl = $('.answer-form .form-control');
@@ -202,13 +214,34 @@ function answerListener() {
             && json['error'] === 400) {
             throw new RestError(400, '답변은 빈값이 될수 없습니다.!!');
         }
+        answers.push(json);
 
-        const targetEl = $('ul.answers');
-        targetEl.innerHTML = appendAnswer(json) + targetEl.innerHTML;
+        resetAnswerList();
 
         contentEl.value = '';
 
     }).catch(errorHandler);
+}
+
+function answerDelegationListener(evt) {
+    if(evt.target.name === ANSWER_DELETE_BUTTON_EL_NAME) {
+        const answerId = evt.currentTarget.children[0].dataset.id;
+
+        AsyncREST.del('/api/questions/1/answers/' + answerId, null).then((json) => {
+            console.log('delete result is ', json);
+
+            // 삭제 하기
+            const deleteTarget = answers.filter((answer) => {
+                return answer.answerId === answerId;
+            })[0];
+
+            const targetIndex = answers.indexOf(deleteTarget);
+            answers.splice(targetIndex, 1);
+
+            resetAnswerList();
+
+        }).catch(errorHandler);
+    }
 }
 
 function initEvents() {
@@ -219,6 +252,10 @@ function initEvents() {
 
     // 답변하기 이벤트 리스너 등록
     $('.answer-form .btn').addEventListener('click', answerListener);
+
+    // 답변 삭제 하기
+    $('ul.answers').addEventListener('click', answerDelegationListener)
+
 }
 
 document.addEventListener("DOMContentLoaded", () => {
