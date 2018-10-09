@@ -44,11 +44,9 @@ app.post('/api/logging', jsonParser,  function(req, res){
     res.json({'loggin':'ok'})
 });
 
-
 app.post('/api/questions/:questionid/answers', jsonParser,  function(req, res){
-    // FIX : session에 userid 저장이 안되어 주석 처리. 나중에 수정 예정.
+    // FIX : session에 userid 저장이 안되어 주석 처리.
     // if(!req.session.userid) res.status(401)
-
     const questionId = req.params.questionid;
     const body = req.body;
     if(!body) res.json({"error" : 400});
