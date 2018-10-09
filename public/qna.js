@@ -86,6 +86,54 @@ function fetchManager(url, method, body) {
     });
 }
 
+async function fetchManagerAsync(url, method, body) {
+    const headers = new Headers();
+    headers.append('Accept', 'application/json');
+    headers.append('Content-Type', 'application/json');
+
+    const myInit = {
+        method: method,
+        headers: headers,
+        body: JSON.stringify(body)
+    };
+
+    const res = await fetch(url, myInit);
+    if (res.ok) {
+        return await res.json();
+    }
+
+    let message;
+    switch (res.status) {
+        case 401:
+            message = '로그인 후 다시 시도해 주시기 바랍니다.';
+            break;
+        default:
+            message = '처리도중 에러가 발생되었습니다.'
+    }
+
+    throw new RestError(res.status, message);
+}
+
+const AsyncREST = {
+    get: (url) => {
+        return fetchManagerAsync(url, 'GET', null);
+    },
+
+    post: (url, body) => {
+        return fetchManagerAsync(url, 'POST', body);
+    },
+
+    put: (url, body) => {
+        return fetchManagerAsync(url, 'PUT', body);
+    },
+
+    del: (url, body) => {
+        return fetchManagerAsync(url, 'DELETE', body);
+    }
+};
+
+
+
 // 로그아웃 이벤트 리스너
 function logoutListener(evt) {
     REST.del('/api/session', {
@@ -127,7 +175,7 @@ function answerListener() {
         return alert('답변은 빈값이 될수 없습니다.!!');
     }
 
-    REST.post('/api/questions/1/answers', {
+    AsyncREST.post('/api/questions/1/answers', {
         content: content
     }).then((json) => {
         if(json['error']
