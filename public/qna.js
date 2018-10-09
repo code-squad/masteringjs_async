@@ -19,55 +19,56 @@ function appendAnswer({content, writer, date, answerId}) {
 }
 
 
+// 이벤트등록
 function initEvents() {
-    // 이벤트등록
-
-    // 1. 로그인 버튼 눌렀을 때 로그인 되도록
-    // 선택자 : .login-btn, url : /api/login
-    // body.user
     $('.login-btn').addEventListener('click', ({target:{outerText}}) => {
-        if(outerText === 'LOGIN') {
-            const data = Object.assign({}, {user:'namdeng_2'});
-            fetch('http://127.0.0.1:3000/api/login', {
+        if(outerText === 'LOGIN') { // 로그인
+            const user = Object.assign({}, {user:'namdeng_2'});
+
+            const requestData = Object.assign({}, {
+                url: 'http://127.0.0.1:3000/api/login',
                 method: 'post',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                content: user
             })
-            .then(res => res.json())
+
+            fetchManager(requestData)
             .then(({login}) => { 
                 if(login === 'ok') {
                     alert('로그인 되었습니다.');
                     $('.login-btn').innerText = 'LOGOUT';
-                }
-                else alert('로그인에 실패 하였습니다.');
+                } else alert('로그인에 실패 하였습니다.');
             })
             .catch((error) => alert('서버와 통신중 에러가 발생하였습니다.'))
-        } else {
-            const data = Object.assign({}, {command:'deletesession'});
-            fetch('http://127.0.0.1:3000/api/session', {
+        } else { // 로그아웃
+            const command = Object.assign({}, { command:'deletesession' });
+            const requestData = Object.assign({}, {
+                url: 'http://127.0.0.1:3000/api/session',
                 method: 'delete',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                content: command
             })
-            .then(res => res.json())
+
+            fetchManager(requestData)
             .then(({result}) => { 
                 if(result === 'ok') {
                     alert('로그아웃 되었습니다.');
                     $('.login-btn').innerText = 'LOGIN';
-                }
-                else alert('로그아웃에 실패 하였습니다.');
+                } else alert('로그아웃에 실패 하였습니다.');
             })
             .catch((error) => alert('서버와 통신중 에러가 발생하였습니다.'))
         }
     });
 }
 
-function fetchManager({requestUrl, method, headers, content, callback}) {
-    fetch(requestUrl, {
+function fetchManager({url, method, headers, content, callback}) {
+    return fetch(url, {
         method: method,
         headers: headers,
-        body: JSON.stringify(content)
-    })
+        body: JSON.stringify(content),
+        // TODO : callback 값 활용. 어떻게(?)
+        callback: callback
+    }).then(res => res.json());
 }
 
 document.addEventListener("DOMContentLoaded", () => {
