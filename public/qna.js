@@ -18,46 +18,55 @@ function appendAnswer({content, writer, date, answerId}) {
     return commentHTML;
 }
 
-
 // 이벤트등록
 function initEvents() {
-    $('.login-btn').addEventListener('click', ({target:{outerText}}) => {
-        if(outerText === 'LOGIN') { // 로그인
-            const user = Object.assign({}, {user:'namdeng_2'});
+    addLoginEvent();
+    addLogoutEvent();
+}
 
-            const requestData = Object.assign({}, {
-                url: 'http://127.0.0.1:3000/api/login',
-                method: 'post',
-                headers: { 'Content-Type': 'application/json' },
-                content: user
-            })
+function addLoginEvent() {
+    $('.login-btn').addEventListener('click', ({ target: { outerText }}) => {
+        if(outerText !== 'LOGIN') return false;
+        
+        const user = Object.assign({}, {user:'namdeng_2'});
+        const clientData = Object.assign({}, {
+            url: 'http://127.0.0.1:3000/api/login',
+            method: 'post',
+            headers: { 'Content-Type': 'application/json' },
+            content: user
+        })
 
-            fetchManager(requestData)
-            .then(({login}) => { 
-                if(login === 'ok') {
-                    alert('로그인 되었습니다.');
-                    $('.login-btn').innerText = 'LOGOUT';
-                } else alert('로그인에 실패 하였습니다.');
-            })
-            .catch((error) => alert('서버와 통신중 에러가 발생하였습니다.'))
-        } else { // 로그아웃
-            const command = Object.assign({}, { command:'deletesession' });
-            const requestData = Object.assign({}, {
-                url: 'http://127.0.0.1:3000/api/session',
-                method: 'delete',
-                headers: { 'Content-Type': 'application/json' },
-                content: command
-            })
+        fetchManager(clientData)
+        .then(({ login }) => { 
+            if(login === 'ok') {
+                alert('로그인 되었습니다.');
+                $('.login-btn').innerText = 'LOGOUT';
+            } else alert('로그인에 실패 하였습니다.');
+        })
+        .catch((error) => alert('서버와 통신중 에러가 발생하였습니다.'));
+    });
+}
 
-            fetchManager(requestData)
-            .then(({result}) => { 
-                if(result === 'ok') {
-                    alert('로그아웃 되었습니다.');
-                    $('.login-btn').innerText = 'LOGIN';
-                } else alert('로그아웃에 실패 하였습니다.');
-            })
-            .catch((error) => alert('서버와 통신중 에러가 발생하였습니다.'))
-        }
+function addLogoutEvent() {
+    $('.login-btn').addEventListener('click', ({ target: { outerText }}) => {
+        if(outerText !== 'LOGOUT') return false;
+        
+        const command = Object.assign({}, { command: 'deletesession' });
+        const clientData = Object.assign({}, {
+            url: 'http://127.0.0.1:3000/api/session',
+            method: 'delete',
+            headers: { 'Content-Type': 'application/json' },
+            content: command
+        })
+
+        fetchManager(clientData)
+        .then(({ result }) => { 
+            if(result === 'ok') {
+                alert('로그아웃 되었습니다.');
+                $('.login-btn').innerText = 'LOGIN';
+            } else alert('로그아웃에 실패 하였습니다.');
+        })
+        .catch((error) => alert('서버와 통신중 에러가 발생하였습니다.'))
     });
 }
 
@@ -68,7 +77,7 @@ function fetchManager({url, method, headers, content, callback}) {
         body: JSON.stringify(content),
         // TODO : callback 값 활용. 어떻게(?)
         callback: callback
-    }).then(res => res.json());
+    }).then(response => response.json());
 }
 
 document.addEventListener("DOMContentLoaded", () => {
