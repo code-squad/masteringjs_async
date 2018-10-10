@@ -66,13 +66,13 @@ function fetchManager(url, method, body) {
     headers.append('Accept', 'application/json');
     headers.append('Content-Type', 'application/json');
 
-    const myInit = {
+    const options = {
         method: method,
         headers: headers,
         body: JSON.stringify(body)
     };
 
-    return fetch(url, myInit).then((res) => {
+    return fetch(url, options).then((res) => {
         if (res.ok) {
             if(url !== API_LOGGING_URL) {
                 asyncLogging(url, method, body).then();
