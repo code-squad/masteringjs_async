@@ -2,29 +2,12 @@ function $(selector) {
     return document.querySelector(selector);
 }
 
-function appendReply({content, writer, date, answerId}) {
-    const commentHTML = `
-    <li class="answer" data-id=${answerId}>
-        <div class="answer-content"> ${content} </div>
-        <div class="answer-metainfo">
-            <div class="answer-id">${writer.id}</div>
-            <div class="answer-date">${date}</div>
-            <div class="answer-util">
-                <a class="answer-delete" href="/api/questions/2/answers/${answerId}">삭제</a>
-            </div>
-        </div>
-    </li> `
-
-    const base = $('ul.answers');
-    base.innerHTML = `${base.innerHTML} ${commentHTML}`;
-}
-
 // 이벤트등록
 function initEvents() {
     addLoginEvent();
     addLogoutEvent();
-    addReplyAppendEvent();
-    // addReplyRemoveEvent();
+    addAppendAnswerEvent();
+    addRemoveAnswerEvent();
 }
 
 function addLoginEvent() {
@@ -81,8 +64,10 @@ function logoutCallback({result}) {
     return fetchLogging('logout');
 }
 
-function addReplyAppendEvent() {
-    $('input[type="button"]').addEventListener('click', evt => {
+function addAppendAnswerEvent() {
+    $('input[type="submit"]').addEventListener('click', evt => {
+        evt.preventDefault();
+
         const inputText = $('textarea.form-control').value;
         const content = Object.assign({}, {content: inputText});
         const clientData = Object.assign({}, {
@@ -91,22 +76,54 @@ function addReplyAppendEvent() {
             credentials: 'same-origin',
             headers: {'Content-Type': 'application/json'},
             content: content,
-            callback: appendReply
+            callback: appendAnswer
         })
 
         fetchManagerAsync(clientData);
-        clearTextArea('textarea.form-control');
+        emptyTextArea('textarea.form-control');
     });
 }
 
-function clearTextArea(selector) {
-    $(selector).value = '';
+function appendAnswer({content, writer, date, answerId}) {
+    const commentHTML = `
+    <li class="answer" data-id=${answerId}>
+        <div class="answer-content"> ${content} </div>
+        <div class="answer-metainfo">
+            <div class="answer-id">${writer.id}</div>
+            <div class="answer-date">${date}</div>
+            <div class="answer-util">
+                <a class="answer-delete" href="/api/questions/2/answers/${answerId}">삭제</a>
+            </div>
+        </div>
+    </li> `
+
+    const answers = $('ul.answers');
+    answers.innerHTML = `${answers.innerHTML} ${commentHTML}`;
+
+    addRemoveAnswerEvent();
 }
 
-function addReply(selector, html) {
-    const base = $(selector);
-    const temp = `${base.innerHTML} ${html}`; 
-    base.innerHTML = temp;
+function addRemoveAnswerEvent() {
+    const liList = document.querySelectorAll('ul.answers .answer-delete');
+    Array.from(liList).forEach(li => {
+        li.addEventListener('click', (evt) => {
+            evt.preventDefault();
+
+            const path = evt.target.getAttribute('href');
+            if(window.confirm('답변을 삭제 하시겠습니까?')) {
+                const url = `http://127.0.0.1:3000${path}`;
+                const clientData = Object.assign({}, {
+                    url: url,
+                    method: 'delete',
+                })
+                fetchManagerAsync(clientData);
+            }
+        })
+    });
+}
+
+function emptyTextArea(selector) {
+    $(selector).value = '';
 }
 
 function fetchManager({url, method, headers, content, callback}) {
@@ -159,5 +176,4 @@ function getJson(response) {
 
 document.addEventListener("DOMContentLoaded", () => {
     initEvents();
-    fetchLogging('add reply');
 })
