@@ -15,11 +15,11 @@ function $(selector) {
 }
 
 function errorHandler(err) {
-    if(err instanceof RestError) {
+    if (err instanceof RestError) {
         return alert(err.message);
     }
 
-    if(err instanceof Error) {
+    if (err instanceof Error) {
         console.error(err.message);
     }
     alert('웁스~!! 처리가 지연되고 있네요\n담당자에게 문의 부탁드립니다.');
@@ -44,19 +44,19 @@ function appendAnswer({content, writer, date, answerId}) {
 }
 
 const REST = {
-    get: (url) => {
+    get(url) {
         return fetchManager(url, 'GET', null);
     },
 
-    post: (url, body) => {
+    post(url, body) {
         return fetchManager(url, 'POST', body);
     },
 
-    put: (url, body) => {
+    put(url, body) {
         return fetchManager(url, 'PUT', body);
     },
 
-    del: (url, body) => {
+    del(url, body) {
         return fetchManager(url, 'DELETE', body);
     }
 };
@@ -74,7 +74,7 @@ function fetchManager(url, method, body) {
 
     return fetch(url, options).then((res) => {
         if (res.ok) {
-            if(url !== API_LOGGING_URL) {
+            if (url !== API_LOGGING_URL) {
                 asyncLogging(url, method, body).then();
             }
             return res.json();
@@ -106,7 +106,7 @@ async function fetchManagerAsync(url, method, body) {
 
     const res = await fetch(url, myInit);
     if (res.ok) {
-        if(url !== API_LOGGING_URL) {
+        if (url !== API_LOGGING_URL) {
             await asyncLogging(url, method, body);
         }
         return await res.json();
@@ -125,19 +125,19 @@ async function fetchManagerAsync(url, method, body) {
 }
 
 const AsyncREST = {
-    get: (url) => {
+    get(url) {
         return fetchManagerAsync(url, 'GET', null);
     },
 
-    post: (url, body) => {
+    post(url, body) {
         return fetchManagerAsync(url, 'POST', body);
     },
 
-    put: (url, body) => {
+    put(url, body) {
         return fetchManagerAsync(url, 'PUT', body);
     },
 
-    del: (url, body) => {
+    del(url, body) {
         return fetchManagerAsync(url, 'DELETE', body);
     }
 };
@@ -151,7 +151,7 @@ async function asyncLogging(url, method, body) {
                 body: body
             }
         });
-    } catch(err) {
+    } catch (err) {
         errorHandler(err);
     }
 }
@@ -189,6 +189,7 @@ function loginListener(evt) {
 }
 
 const answers = [];
+
 function resetAnswerList() {
     // noinspection UnnecessaryLocalVariableJS
     const answersHtml = answers.map((answer) => {
@@ -203,14 +204,14 @@ function answerListener() {
     const contentEl = $('.answer-form .form-control');
     const content = contentEl.value;
 
-    if(!content) {
+    if (!content) {
         return alert('답변은 빈값이 될수 없습니다.!!');
     }
 
     AsyncREST.post('/api/questions/1/answers', {
         content: content
     }).then((json) => {
-        if(json['error']
+        if (json['error']
             && json['error'] === 400) {
             throw new RestError(400, '답변은 빈값이 될수 없습니다.!!');
         }
@@ -224,7 +225,7 @@ function answerListener() {
 }
 
 function answerDelegationListener(evt) {
-    if(evt.target.name === ANSWER_DELETE_BUTTON_EL_NAME) {
+    if (evt.target.name === ANSWER_DELETE_BUTTON_EL_NAME) {
         const answerId = evt.currentTarget.children[0].dataset.id;
 
         AsyncREST.del('/api/questions/1/answers/' + answerId, null).then((json) => {
