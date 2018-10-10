@@ -1,6 +1,5 @@
 'use strict';
 
-const API_LOGGING_URL = '/api/logging';
 const ANSWER_DELETE_BUTTON_EL_NAME = 'btn-answer-delete';
 
 class RestError extends Error {
@@ -44,24 +43,24 @@ function appendAnswer({content, writer, date, answerId}) {
 }
 
 const REST = {
-    get(url) {
-        return fetchManager(url, 'GET', null);
+    get(url, callback) {
+        fetchManager(url, 'GET', null, callback);
     },
 
-    post(url, body) {
-        return fetchManager(url, 'POST', body);
+    post(url, body, callback) {
+        fetchManager(url, 'POST', body, callback);
     },
 
-    put(url, body) {
-        return fetchManager(url, 'PUT', body);
+    put(url, body, callback) {
+        fetchManager(url, 'PUT', body, callback);
     },
 
-    del(url, body) {
-        return fetchManager(url, 'DELETE', body);
+    del(url, body, callback) {
+        fetchManager(url, 'DELETE', body, callback);
     }
 };
 
-function fetchManager(url, method, body) {
+function fetchManager(url, method, body, callback) {
     const headers = new Headers();
     headers.append('Accept', 'application/json');
     headers.append('Content-Type', 'application/json');
@@ -73,13 +72,45 @@ function fetchManager(url, method, body) {
     };
 
     return fetch(url, options).then((res) => {
-        if (res.ok) {
-            if (url !== API_LOGGING_URL) {
-                asyncLogging(url, method, body).then();
+        if (!res.ok) {
+            let message;
+            switch (res.status) {
+                case 401:
+                    message = '로그인 후 다시 시도해 주시기 바랍니다.';
+                    break;
+                default:
+                    message = '처리도중 에러가 발생되었습니다.'
             }
-            return res.json();
+
+            throw new RestError(res.status, message);
         }
 
+        return res.json();
+    }).then((json) => {
+        callback(json);
+    }).then(() => {
+        return asyncLogging(url, method, body);
+    }).then((response) => {
+        if (response.loggin === 'ok') {
+            console.log('logging success!!');
+        }
+    }).catch(errorHandler);
+}
+
+async function fetchManagerAsync(url, method, body, callback) {
+    const headers = new Headers();
+    headers.append('Accept', 'application/json');
+    headers.append('Content-Type', 'application/json');
+
+    const options = {
+        method: method,
+        headers: headers,
+        body: JSON.stringify(body)
+    };
+
+    const res = await fetch(url, options);
+
+    if (!res.ok) {
         let message;
         switch (res.status) {
             case 401:
@@ -90,102 +121,79 @@ function fetchManager(url, method, body) {
         }
 
         throw new RestError(res.status, message);
-    });
+    }
+
+    const json = await res.json();
+    callback(json);
+
+    const response = await asyncLogging(url, method, body);
+    if (response.loggin === 'ok') {
+        console.log('logging success!!');
+    }
 }
 
-async function fetchManagerAsync(url, method, body) {
+const AsyncREST = {
+    get(url, callback) {
+        fetchManagerAsync(url, 'GET', null, callback).catch(errorHandler);
+    },
+
+    post(url, body, callback) {
+        fetchManagerAsync(url, 'POST', body, callback).catch(errorHandler);
+    },
+
+    put(url, body, callback) {
+        fetchManagerAsync(url, 'PUT', body, callback).catch(errorHandler);
+    },
+
+    del(url, body, callback) {
+        fetchManagerAsync(url, 'DELETE', body, callback).catch(errorHandler);
+    }
+};
+
+async function asyncLogging(url, method, body) {
     const headers = new Headers();
     headers.append('Accept', 'application/json');
     headers.append('Content-Type', 'application/json');
 
-    const myInit = {
+    const options = {
         method: method,
         headers: headers,
         body: JSON.stringify(body)
     };
 
-    const res = await fetch(url, myInit);
-    if (res.ok) {
-        if (url !== API_LOGGING_URL) {
-            await asyncLogging(url, method, body);
-        }
-        return await res.json();
-    }
-
-    let message;
-    switch (res.status) {
-        case 401:
-            message = '로그인 후 다시 시도해 주시기 바랍니다.';
-            break;
-        default:
-            message = '처리도중 에러가 발생되었습니다.'
-    }
-
-    throw new RestError(res.status, message);
-}
-
-const AsyncREST = {
-    get(url) {
-        return fetchManagerAsync(url, 'GET', null);
-    },
-
-    post(url, body) {
-        return fetchManagerAsync(url, 'POST', body);
-    },
-
-    put(url, body) {
-        return fetchManagerAsync(url, 'PUT', body);
-    },
-
-    del(url, body) {
-        return fetchManagerAsync(url, 'DELETE', body);
-    }
-};
-
-async function asyncLogging(url, method, body) {
-    try {
-        await AsyncREST.post(API_LOGGING_URL, {
-            logType: {
-                url: url,
-                method: method,
-                body: body
-            }
-        });
-    } catch (err) {
-        errorHandler(err);
-    }
+    return await fetch(url, options);
 }
 
 // 로그아웃 이벤트 리스너
 function logoutListener(evt) {
-    REST.del('/api/session', {
-        command: 'deletesession'
-    }).then((json) => {
-        if (json.result === 'ok') {
-            evt.target.innerText = 'LOGIN';
-            evt.target.removeEventListener('click', logoutListener);
-            evt.target.addEventListener('click', loginListener);
-            return false;
-        }
+    REST.del('/api/session',
+        {command: 'deletesession'},
+        (json) => {
+            if (json.result === 'ok') {
+                evt.target.innerText = 'LOGIN';
+                evt.target.removeEventListener('click', logoutListener);
+                evt.target.addEventListener('click', loginListener);
+                return false;
+            }
 
-        throw new RestError(500, '로그아웃에 실패 하였습니다.\n재시도 해주세요');
-    }).catch(errorHandler);
+            throw new RestError(500, '로그아웃에 실패 하였습니다.\n재시도 해주세요');
+        });
 }
 
 // 로그인 이벤트 리스너
 function loginListener(evt) {
-    REST.post('/api/login', {
-        user: 'jjori.master'
-    }).then((json) => {
-        if (json.login === 'ok') {
-            evt.target.innerText = 'LOGOUT';
-            evt.target.removeEventListener('click', loginListener);
-            evt.target.addEventListener('click', logoutListener);
-            return false;
-        }
+    REST.post('/api/login',
+        {user: 'jjori.master'},
+        (json) => {
+            if (json.login === 'ok') {
+                evt.target.innerText = 'LOGOUT';
+                evt.target.removeEventListener('click', loginListener);
+                evt.target.addEventListener('click', logoutListener);
+                return false;
+            }
 
-        throw new RestError(401, '로그인 실패');
-    }).catch((errorHandler));
+            throw new RestError(401, '로그인 실패');
+        });
 }
 
 const answers = [];
@@ -208,40 +216,41 @@ function answerListener() {
         return alert('답변은 빈값이 될수 없습니다.!!');
     }
 
-    AsyncREST.post('/api/questions/1/answers', {
-        content: content
-    }).then((json) => {
-        if (json['error']
-            && json['error'] === 400) {
-            throw new RestError(400, '답변은 빈값이 될수 없습니다.!!');
-        }
-        answers.push(json);
+    AsyncREST.post('/api/questions/1/answers',
+        {content: content},
+        (json) => {
+            if (json['error']
+                && json['error'] === 400) {
+                throw new RestError(400, '답변은 빈값이 될수 없습니다.!!');
+            }
+            answers.push(json);
 
-        resetAnswerList();
+            resetAnswerList();
 
-        contentEl.value = '';
-
-    }).catch(errorHandler);
+            contentEl.value = '';
+        });
 }
 
 function answerDelegationListener(evt) {
     if (evt.target.name === ANSWER_DELETE_BUTTON_EL_NAME) {
         const answerId = evt.currentTarget.children[0].dataset.id;
 
-        AsyncREST.del('/api/questions/1/answers/' + answerId, null).then((json) => {
-            console.log('delete result is ', json);
+        AsyncREST.del('/api/questions/1/answers/' + answerId,
+            null,
+            (json) => {
+                console.log('delete result is ', json);
 
-            // 삭제 하기
-            const deleteTarget = answers.filter((answer) => {
-                return answer.answerId === answerId;
-            })[0];
+                // 삭제 하기
+                const deleteTarget = answers.filter((answer) => {
+                    return answer.answerId === answerId;
+                })[0];
 
-            const targetIndex = answers.indexOf(deleteTarget);
-            answers.splice(targetIndex, 1);
+                const targetIndex = answers.indexOf(deleteTarget);
+                answers.splice(targetIndex, 1);
 
-            resetAnswerList();
+                resetAnswerList();
 
-        }).catch(errorHandler);
+            });
     }
 }
 
