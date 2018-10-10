@@ -46,7 +46,7 @@ app.post('/api/questions/:questionid/answers', jsonParser,  function(req, res){
     const body = req.body;
     if(!body) res.json({"error" : 400});
 
-    console.log("[post] : ", body.content);
+//    console.log("[post] : ", body.content);
 
 	res.json({
         "answerId" : shortid.generate(),
@@ -65,8 +65,19 @@ app.delete('/api/session', jsonParser,  function(req, res){
     res.json({'result':'ok'})
 });
 
+app.post('/api/session' , jsonParser,  function(req, res){
+    const value = req.session[ req.body.name]
+    if(value) {
+        res.json({ "login" : "ok" });
+    } else {
+        res.json({ "login" : "fail" });
+    }
+});
+
 app.delete('/api/questions/:questionid/answers/:answerid', function(req,res) {
+    if(!req.session.userid)  res.status(401)
+
     const answerid = req.params.answerid;
-    console.log("[delete]", answerid);
+  //  console.log("[delete]", answerid);
     res.json({'answerid' : answerid})
 });
