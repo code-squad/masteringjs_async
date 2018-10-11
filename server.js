@@ -38,6 +38,15 @@ app.post('/api/logging', jsonParser,  function(req, res){
     res.json({'loggin':'ok'})
 });
 
+app.post('/api/check/login', jsonParser ,function(req,res){
+    if(req.session.userid === req.body.user){
+        res.json({ "login_status" : "ok" ,
+                   "login_id" : req.session.userid
+                    });
+    }else{
+        res.json({ "login_status" : "fail" });
+    }
+});
 
 app.post('/api/questions/:questionid/answers', jsonParser,  function(req, res){
     if(!req.session.userid)  res.status(401)
@@ -54,7 +63,7 @@ app.post('/api/questions/:questionid/answers', jsonParser,  function(req, res){
         "content" : body.content,
         "date" : "2018-08-11",
         "writer" : {
-            "id" : "crong"
+            "id" : req.session.userid
         }
     })
 })
