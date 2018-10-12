@@ -95,7 +95,7 @@ function appendAnswer({
 
 function renderAnswer(htmlEl) {
   const answers = $('.answers');
-  answers.innerHTML = htmlEl + answers.innerHTML;
+  answers.innerHTML = answers.innerHTML + htmlEl;
 }
 
 function fetchManager({url, method, headers, body, callback}) {
