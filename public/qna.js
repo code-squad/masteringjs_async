@@ -1,7 +1,3 @@
-const data = {
-  isLoggedIn: false,
-};
-
 function $(selector) {
   return document.querySelector(selector);
 }
@@ -30,11 +26,11 @@ function appendAnswer({
 function addLoginEvent() {
   const loginButton = $('.login-btn');
   loginButton.addEventListener("click", () => {
-    if (!data.isLoggedIn) {
+    if (loginButton.innerText === 'LOGIN') {
       logIn({user: 'hyeyoon'});
       loginButton.innerText = 'LOGOUT';
     } else {
-      logOut();
+      logOut({'command':'deletesession'});
       loginButton.innerText = 'LOGIN';
     }
   })
@@ -56,8 +52,20 @@ function logIn(data) {
   })
 }
 
-function logOut() {
-  
+function logOut(data) {
+  fetch('/api/session', {
+    method: 'DELETE',
+    body: JSON.stringify(data),
+    headers:{
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => {
+    console.log('response:', response);
+  })
+  .catch(error => {
+    console.error(error);
+  })
 }
 
 function initEvents() {
