@@ -23,6 +23,9 @@ function logIn() {
     },
     callback: renderButtonText
   })
+  .then(() => {
+    loggingData('Login')
+  })
 }
 
 function logOut() {
@@ -34,6 +37,9 @@ function logOut() {
       'Content-Type': 'application/json'
     },
     callback: renderButtonText
+  })
+  .then(() => {
+    loggingData('Logout')
   })
 }
 
@@ -71,6 +77,9 @@ function addAnswer(content) {
     callback: appendAnswer
   })
   .then(renderAnswer)
+  .then(() => {
+    loggingData('Add answer');
+  })
   .catch(error => {
     console.error(error);
   })
@@ -112,6 +121,19 @@ function checkResponse(response) {
   } else {
     return response.json();
   }
+}
+
+function loggingData(logType) {
+  fetch('/api/logging', {
+    method: 'POST',
+    body: JSON.stringify({logType}),
+    headers:{
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(() => {
+    console.log('log: ', logType);
+  })
 }
 
 function fetchManager({url, method, headers, body, callback}) {
