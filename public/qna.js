@@ -31,13 +31,33 @@ function addLoginEvent() {
   const loginButton = $('.login-btn');
   loginButton.addEventListener("click", () => {
     if (!data.isLoggedIn) {
-      doLogin();
+      logIn({user: 'hyeyoon'});
       loginButton.innerText = 'LOGOUT';
     } else {
-      doLogout();
+      logOut();
       loginButton.innerText = 'LOGIN';
     }
   })
+}
+
+function logIn(data) {
+  fetch('/api/login', {
+    method: 'POST',
+    body: JSON.stringify(data),
+    headers:{
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => {
+    console.log('response:', response);
+  })
+  .catch(error => {
+    console.error(error);
+  })
+}
+
+function logOut() {
+  
 }
 
 function initEvents() {
