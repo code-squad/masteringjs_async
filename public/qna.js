@@ -1,3 +1,41 @@
+class defaultFetchOption {
+    constructor ( options={}) {
+        const defaultData = this.getDefault()
+        this.options = Object.assign( {} , defaultData, options.options)
+        if( options.options.headers) this.options.headers = options.options.headers
+        if( options.url) this.url = this.options.host + options.url.replace( this.options.host , '')
+
+        const logType = {
+            logType : {
+                url    : this.url,
+                method : this.options.method,
+                body   : this.options.body
+            }
+        }
+
+        this.logging = {
+            url : defaultData.host + 'api/logging',
+            option : { method:defaultData.method,headers:defaultData.headers , body : JSON.stringify( logType)}
+        }
+
+        return this
+    }
+    getDefault () {
+        return {
+            host : "http://localhost:3000/",
+            method : 'post',
+            headers : {'Content-Type': 'application/json'}
+        }
+    }
+    get () {
+        return {
+            logging : this.logging,
+            url        : this.url,
+            option     : this.options
+        }
+    }
+}
+
 function $(selector) {
     return document.querySelector(selector);
 }
@@ -20,19 +58,18 @@ function appendAnswer({content, writer, date, answerId}) {
 
 
 function fetchManager ( param = {}) {
-    const host    = "http://localhost:3000/",
-          headers = {'Content-Type': 'application/json'}
-    const options = Object.assign( { headers : headers} , param.options) 
+    const { url , option ,logging} = new defaultFetchOption( param).get()
 
-    return fetch( host+ param.url.replace( host , ''), options).then(function (response){
-        if( response.status !== 200) throw new Error( `[${response.status}] error`)
+    return fetch( url, option).then(function (response){
+        checkStatus( response.status)
         return response.json()
     }).then( function( data) {
         if( param.callback)
             param.callback( data)
-        return fetch(host + 'api/logging' ,  { method:'post',headers:headers , body : JSON.stringify( {logType : param})})
+        return fetch( logging.url ,  logging.option)
     }).then( function(response) {
-        if( response.status !== 200) throw new Error( `[${response.status}] logging error`)
+        checkStatus( response.status)
+
     }).catch(function(err){console.log(err)})
 }
 
@@ -127,9 +164,10 @@ function loginCheck( callback) {
         },
         callback : callback
     }
-
+    //fetchManagerAsync( options)
     fetchManager( options )
 }
+
 function initEvents() {
     //이벤트등록
     const $loginElement = [ $('header .login-btn')],
@@ -177,3 +215,23 @@ function initEvents() {
 document.addEventListener("DOMContentLoaded", () => {
     initEvents();
 })
+
+function checkStatus ( status) {
+    if( status !== 200) throw new Error( `[${status}] error`)
+}
+
+/* async */
+async function fetchManagerAsync ( param = {}) {
+    const host    = "http://localhost:3000/",
+          headers = {'Content-Type': 'application/json'}
+    const { url, option, logging } = new defaultFetchOption( param).get()
+    const result = await fetch( url, option)
+    const data = await result.json()
+
+    checkStatus(result.status)
+
+    if( param.callback) param.callback( data)
+    const logResult = await fetch( logging.url ,  logging.option)
+    checkStatus( logResult.status)
+}
+
