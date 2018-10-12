@@ -1,3 +1,7 @@
+const data = {
+  isLoggedIn: false,
+};
+
 function $(selector) {
   return document.querySelector(selector);
 }
@@ -23,9 +27,22 @@ function appendAnswer({
   return commentHTML;
 }
 
+function addLoginEvent() {
+  const loginButton = $('.login-btn');
+  loginButton.addEventListener("click", () => {
+    if (!data.isLoggedIn) {
+      doLogin();
+      loginButton.innerText = 'LOGOUT';
+    } else {
+      doLogout();
+      loginButton.innerText = 'LOGIN';
+    }
+  })
+}
 
 function initEvents() {
   //이벤트등록
+  addLoginEvent();
 }
 
 document.addEventListener("DOMContentLoaded", () => {
