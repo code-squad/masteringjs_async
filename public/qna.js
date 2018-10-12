@@ -6,45 +6,44 @@ function addLoginEvent() {
   const loginButton = $('.login-btn');
   loginButton.addEventListener("click", () => {
     if (loginButton.innerText === 'LOGIN') {
-      logIn({user: 'crong'});
-      loginButton.innerText = 'LOGOUT';
+      logIn();
     } else {
-      logOut({'command':'deletesession'});
-      loginButton.innerText = 'LOGIN';
+      logOut();
     }
   })
 }
 
-function logIn(data) {
-  fetch('/api/login', {
+function logIn() {
+  fetchManager({
+    url: '/api/login',
     method: 'POST',
-    body: JSON.stringify(data),
+    body: JSON.stringify({user: 'crong'}),
     headers:{
       'Content-Type': 'application/json'
-    }
-  })
-  .then(response => {
-    console.log('response:', response);
-  })
-  .catch(error => {
-    console.error(error);
+    },
+    callback: renderButtonText
   })
 }
 
-function logOut(data) {
-  fetch('/api/session', {
+function logOut() {
+  fetchManager({
+    url: '/api/session',
     method: 'DELETE',
-    body: JSON.stringify(data),
+    body: JSON.stringify({'command':'deletesession'}),
     headers:{
       'Content-Type': 'application/json'
-    }
+    },
+    callback: renderButtonText
   })
-  .then(response => {
-    console.log('response:', response);
-  })
-  .catch(error => {
-    console.error(error);
-  })
+}
+
+function renderButtonText() {
+  const loginButton = $('.login-btn');
+  if (loginButton.innerText === 'LOGIN') {
+    loginButton.innerText = 'LOGOUT';
+  } else {
+    loginButton.innerText = 'LOGIN';
+  }
 }
 
 function addAnswerEvent() {
@@ -58,15 +57,15 @@ function addAnswerEvent() {
 }
 
 function addAnswer(content) {
-  fetch('/api/questions/1/answers', {
+  fetchManager({
+    url: '/api/questions/1/answers',
     method: 'POST',
     body: JSON.stringify({content}),
     headers:{
       'Content-Type': 'application/json'
-    }
+    },
+    callback: appendAnswer
   })
-  .then(response => response.json())
-  .then(appendAnswer)
   .then(renderAnswer)
   .catch(error => {
     console.error(error);
@@ -97,6 +96,19 @@ function appendAnswer({
 function renderAnswer(htmlEl) {
   const answers = $('.answers');
   answers.innerHTML = htmlEl + answers.innerHTML;
+}
+
+function fetchManager({url, method, headers, body, callback}) {
+  return fetch(url, {
+    method,
+    headers,
+    body
+  })
+  .then(response => response.json())
+  .then(callback)
+  .catch(error => {
+    console.error(error);
+  })
 }
 
 function initEvents() {
