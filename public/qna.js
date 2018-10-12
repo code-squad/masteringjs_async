@@ -2,32 +2,11 @@ function $(selector) {
   return document.querySelector(selector);
 }
 
-function appendAnswer({
-  content,
-  writer,
-  date,
-  answerId
-}) {
-  const commentHTML = `
-    <li class="answer" data-id=${answerId}>
-      <div class="answer-content"> ${content} </div>
-      <div class="answer-metainfo">
-        <div class="answer-id">${writer.id}</div>
-        <div class="answer-date">${date}</div>
-        <div class="answer-util">
-          <a class="answer-delete" href="/api/questions/2/answers/${answerId}">삭제</a>
-        </div>
-      </div>
-    </li> `
-
-  return commentHTML;
-}
-
 function addLoginEvent() {
   const loginButton = $('.login-btn');
   loginButton.addEventListener("click", () => {
     if (loginButton.innerText === 'LOGIN') {
-      logIn({user: 'hyeyoon'});
+      logIn({user: 'crong'});
       loginButton.innerText = 'LOGOUT';
     } else {
       logOut({'command':'deletesession'});
@@ -68,9 +47,62 @@ function logOut(data) {
   })
 }
 
+function addAnswerEvent() {
+  const answerForm = $('.answer-form');
+  const answer = $('.form-control');
+  answerForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    addAnswer(answer.value);
+    answer.value = '';
+  })
+}
+
+function addAnswer(content) {
+  fetch('/api/questions/1/answers', {
+    method: 'POST',
+    body: JSON.stringify({content}),
+    headers:{
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => response.json())
+  .then(appendAnswer)
+  .then(renderAnswer)
+  .catch(error => {
+    console.error(error);
+  })
+}
+
+function appendAnswer({
+  content,
+  writer,
+  date,
+  answerId
+}) {
+  const commentHTML = `
+    <li class="answer" data-id=${answerId}>
+      <div class="answer-content"> ${content} </div>
+      <div class="answer-metainfo">
+        <div class="answer-id">${writer.id}</div>
+        <div class="answer-date">${date}</div>
+        <div class="answer-util">
+          <a class="answer-delete" href="/api/questions/2/answers/${answerId}">삭제</a>
+        </div>
+      </div>
+    </li> `
+
+  return commentHTML;
+}
+
+function renderAnswer(htmlEl) {
+  const answers = $('.answers');
+  answers.innerHTML = htmlEl + answers.innerHTML;
+}
+
 function initEvents() {
   //이벤트등록
   addLoginEvent();
+  addAnswerEvent();
 }
 
 document.addEventListener("DOMContentLoaded", () => {
