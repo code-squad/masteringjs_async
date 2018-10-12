@@ -14,7 +14,7 @@ function addLoginEvent() {
 }
 
 function logIn() {
-  fetchManager({
+  fetchManagerAsync({
     url: '/api/login',
     method: 'POST',
     body: JSON.stringify({user: 'crong'}),
@@ -29,7 +29,7 @@ function logIn() {
 }
 
 function logOut() {
-  fetchManager({
+  fetchManagerAsync({
     url: '/api/session',
     method: 'DELETE',
     body: JSON.stringify({'command':'deletesession'}),
@@ -67,7 +67,7 @@ function addAnswerEvent() {
 }
 
 function addAnswer(content) {
-  fetchManager({
+  fetchManagerAsync({
     url: '/api/questions/1/answers',
     method: 'POST',
     body: JSON.stringify({content}),
@@ -147,6 +147,21 @@ function fetchManager({url, method, headers, body, callback}) {
   .catch(error => {
     console.error(error);
   })
+}
+
+async function fetchManagerAsync({url, method, headers, body, callback}) {
+  try {
+    const response = await fetch(url, {
+      method,
+      headers,
+      body
+    })
+    const checkedResponse = await checkResponse(response);
+    const callbackReturn = await callback(checkedResponse);
+    return callbackReturn;
+  } catch(error) {
+    console.error(error);
+  }
 }
 
 function initEvents() {
