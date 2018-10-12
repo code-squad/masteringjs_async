@@ -51,7 +51,11 @@ function addAnswerEvent() {
   const answer = $('.form-control');
   answerForm.addEventListener("submit", (event) => {
     event.preventDefault();
-    addAnswer(answer.value);
+    if (answer.value) {
+      addAnswer(answer.value);
+    } else {
+      alert('내용을 입력해주세요.')
+    }
     answer.value = '';
   })
 }
@@ -95,7 +99,19 @@ function appendAnswer({
 
 function renderAnswer(htmlEl) {
   const answers = $('.answers');
-  answers.innerHTML = answers.innerHTML + htmlEl;
+  if (htmlEl) {
+    answers.innerHTML = answers.innerHTML + htmlEl;
+  }
+}
+
+function checkResponse(response) {
+  console.log('response:', response);
+  if (response.status === 401) {
+    alert ('인증되지 않은 사용자입니다. \n로그인 후 사용해주세요.');
+    return Promise.reject('인증되지 않은 사용자입니다.'); 
+  } else {
+    return response.json();
+  }
 }
 
 function fetchManager({url, method, headers, body, callback}) {
@@ -104,7 +120,7 @@ function fetchManager({url, method, headers, body, callback}) {
     headers,
     body
   })
-  .then(response => response.json())
+  .then(checkResponse)
   .then(callback)
   .catch(error => {
     console.error(error);
