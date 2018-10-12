@@ -23,9 +23,7 @@ function logIn() {
     },
     callback: renderButtonText
   })
-  .then(() => {
-    loggingData('Login')
-  })
+  .then(() => loggingData('Login'))
 }
 
 function logOut() {
@@ -38,9 +36,7 @@ function logOut() {
     },
     callback: renderButtonText
   })
-  .then(() => {
-    loggingData('Logout')
-  })
+  .then(() => loggingData('Logout'))
 }
 
 function renderButtonText() {
@@ -52,7 +48,7 @@ function renderButtonText() {
   }
 }
 
-function addAnswerEvent() {
+function addAnswerFormEvent() {
   const answerForm = $('.answer-form');
   const answer = $('.form-control');
   answerForm.addEventListener("submit", (event) => {
@@ -77,9 +73,7 @@ function addAnswer(content) {
     callback: appendAnswer
   })
   .then(renderAnswer)
-  .then(() => {
-    loggingData('Add answer');
-  })
+  .then(() => loggingData('Add answer'))
   .catch(error => {
     console.error(error);
   })
@@ -111,6 +105,40 @@ function renderAnswer(htmlEl) {
   if (htmlEl) {
     answers.innerHTML = answers.innerHTML + htmlEl;
   }
+}
+
+function addAnswerListEvent() {
+  const answers = $('.answers');
+  answers.addEventListener('click', event => {
+    event.preventDefault();
+    delegateEventToChild(event)
+  })
+}
+
+function delegateEventToChild(event) {
+  if (event.target.tagName === 'A') {
+    fetchManagerAsync({
+      url: event.target.href,
+      method: 'DELETE',
+      headers:{
+        'Content-Type': 'application/json'
+      },
+      callback: deleteAnswer
+    })
+    .then(() => loggingData('Delete answer'))
+  }
+}
+
+function deleteAnswer({answerid}) {
+  const answers = $('.answers');
+  let nodeIndex;
+  for (let i = 0; i < answers.children.length; i++) {
+    if (answers.children[i].dataset.id === answerid) {
+      nodeIndex = i;
+    };
+  }
+  answers.removeChild(answers.children[nodeIndex]);
+  alert('답변이 삭제되었습니다.')
 }
 
 function checkResponse(response) {
@@ -167,7 +195,8 @@ async function fetchManagerAsync({url, method, headers, body, callback}) {
 function initEvents() {
   //이벤트등록
   addLoginEvent();
-  addAnswerEvent();
+  addAnswerFormEvent();
+  addAnswerListEvent();
 }
 
 document.addEventListener("DOMContentLoaded", () => {
