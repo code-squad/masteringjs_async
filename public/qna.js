@@ -1,34 +1,29 @@
-function $(selector) {
-    return document.querySelector(selector);
-}
-
+const $ = (selector) => document.querySelector(selector);
 // 이벤트등록
-function initEvents() {
-    addLoginEvent();
-    addLogoutEvent();
-    addAppendAnswerEvent();
-    addRemoveAnswerEvent();
+const initEvents = () => {
+    attachLoginEvent();
+    attachLogoutEvent();
+    attachAppendAnswerEvent();
+    attachRemoveAnswerEvent();
 }
 
-function addLoginEvent() {
+const attachLoginEvent = () => {
     $('.login-btn').addEventListener('click', ({target: {outerText}}) => {
         if(outerText !== 'LOGIN') return;
         
-        const content = Object.assign({}, {user: 'namdeng_2'});
-        const clientData = Object.assign({}, {
+        const clientData = {
             url: 'http://127.0.0.1:3000/api/login',
             method: 'post',
             credentials: 'same-origin',
             headers: {'Content-Type': 'application/json'},
-            content: content,
-            callback: loginCallback
-        })
-
+            content: {user: 'namdeng_2'},
+            callback: login
+        };
         fetchManager(clientData);
     });
 }
 
-function loginCallback({login}) {
+const login = ({login}) => {
     if(login === 'ok') {
         alert('로그인 되었습니다.');
         $('.login-btn').innerText = 'LOGOUT';
@@ -37,25 +32,23 @@ function loginCallback({login}) {
     return fetchLogging('login');
 }
 
-function addLogoutEvent() {
+const attachLogoutEvent = () => {
     $('.login-btn').addEventListener('click', ({target: {outerText}}) => {
         if(outerText !== 'LOGOUT') return;
         
-        const content = Object.assign({}, { command: 'deletesession' });
-        const clientData = Object.assign({}, {
+        const clientData = {
             url: 'http://127.0.0.1:3000/api/session',
             method: 'delete',
             credentials: 'same-origin',
             headers: {'Content-Type': 'application/json'},
-            content: content,
-            callback: logoutCallback
-        })
-
+            content: {command: 'deletesession'},
+            callback: logout
+        };
         fetchManager(clientData);
     });
 }
 
-function logoutCallback({result}) {
+const logout = ({result}) => {
     if(result === 'ok') {
         alert('로그아웃 되었습니다.');
         $('.login-btn').innerText = 'LOGIN';
@@ -64,27 +57,25 @@ function logoutCallback({result}) {
     return fetchLogging('logout');
 }
 
-function addAppendAnswerEvent() {
+const attachAppendAnswerEvent = () => {
     $('input[type="submit"]').addEventListener('click', evt => {
         evt.preventDefault();
 
         const inputText = $('textarea.form-control').value;
-        const content = Object.assign({}, {content: inputText});
-        const clientData = Object.assign({}, {
+        const clientData = {
             url: 'http://127.0.0.1:3000/api/questions/1/answers',
             method: 'post',
             credentials: 'same-origin',
             headers: {'Content-Type': 'application/json'},
-            content: content,
+            content: {content: inputText},
             callback: appendAnswer
-        })
-
+        };
         fetchManagerAsync(clientData);
         emptyTextArea('textarea.form-control');
     });
 }
 
-function appendAnswer({content, writer, date, answerId}) {
+const appendAnswer = ({content, writer, date, answerId}) => {
     const commentHTML = `
     <li class="answer" data-id=${answerId}>
         <div class="answer-content"> ${content} </div>
@@ -100,10 +91,10 @@ function appendAnswer({content, writer, date, answerId}) {
     const answers = $('ul.answers');
     answers.innerHTML = `${answers.innerHTML} ${commentHTML}`;
 
-    addRemoveAnswerEvent();
+    attachRemoveAnswerEvent();
 }
 
-function addRemoveAnswerEvent() {
+const attachRemoveAnswerEvent = () => {
     const liList = document.querySelectorAll('ul.answers .answer-delete');
     Array.from(liList).forEach(li => {
         li.addEventListener('click', (evt) => {
@@ -112,21 +103,20 @@ function addRemoveAnswerEvent() {
             const path = evt.target.getAttribute('href');
             if(window.confirm('답변을 삭제 하시겠습니까?')) {
                 const url = `http://127.0.0.1:3000${path}`;
-                const clientData = Object.assign({}, {
+                const clientData = {
                     url: url,
                     method: 'delete',
-                })
+                    callback: removeAnswer
+                };
                 fetchManagerAsync(clientData);
             }
         })
     });
 }
 
-function emptyTextArea(selector) {
-    $(selector).value = '';
-}
-
-function fetchManager({url, method, headers, content, callback}) {
+const removeAnswer = ({answerid}) => alert(`${answerid}번 답변이 삭제되었습니다.`);
+const emptyTextArea = selector => $(selector).value = '';
+const fetchManager = ({url, method, headers, content, callback}) => {
     return fetch(url, {
         method: method,
         headers: headers,
@@ -135,44 +125,42 @@ function fetchManager({url, method, headers, content, callback}) {
     .then(checkHttpStatus)
     .then(getJson)
     .then(callback)
-    .catch(error => alert('에러가 발생하였습니다.' + error));
+    .catch(error => alert(`에러가 발생하였습니다. + ${error}`));
 }
 
-async function fetchManagerAsync({url, method, headers, content, callback}) {
-    return await fetch(url, {
-        method: method,
-        headers: headers,
-        body: JSON.stringify(content),
-    })
-    .then(checkHttpStatus)
-    .then(getJson)
-    .then(callback)
-    .catch(error => alert('에러가 발생하였습니다.' + error));
+const fetchManagerAsync = async ({url, method, headers, content, callback}) => {
+    try {
+        const fetchInit = {
+            method: method,
+            headers: headers,
+            body: JSON.stringify(content),
+        };
+        const response = await fetch(url, fetchInit);
+        const json = await getJson(await checkHttpStatus(response));
+        await callback(json);
+    } catch (error) {
+        alert(`에러가 발생하였습니다. + ${error}`);
+    }
 }
 
-function fetchLogging(type) {
-    const content = Object.assign({}, {logType: type});
+const fetchLogging = type => {
     return fetch('http://127.0.0.1:3000/api/logging', {
         method: 'post',
         credentials: 'same-origin',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(content)
+        body: JSON.stringify({logType: type})
     })
     .then(checkHttpStatus)
     .then(getJson)
     .then(({loggin}) => console.log('loggin :', loggin))
-    .catch(error => alert('에러가 발생하였습니다.' + error));
+    .catch(error => alert(`에러가 발생하였습니다. ${error}`));
 }
-
-function checkHttpStatus(response) {
+const checkHttpStatus = response => {
     const {status, statusText} = response;
     if(status >= 200 && status < 300) return Promise.resolve(response);
     else return Promise.reject(new Error(statusText));
 }
-
-function getJson(response) {
-    return response.json();
-}
+const getJson = response => response.json();
 
 document.addEventListener("DOMContentLoaded", () => {
     initEvents();
