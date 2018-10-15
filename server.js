@@ -9,6 +9,14 @@ app.listen(3000, function() {
 	console.log("start, express server on port 3000");
 });
 
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "http://127.0.0.1:8080");
+    res.header("Access-Control-Allow-Methods", "POST, DELETE");
+    res.header("Access-Control-Allow-Headers", "Content-Type");
+    // res.header("Access-Control-Allow-Credentials", true);
+    // res.header("Access-Control-Max-Age", 600); // Maximum 10분으로
+    next();
+})
 app.use(express.static('public'))
 app.use(bodyParser.urlencoded({extended:false}))
 app.use(session({
@@ -19,7 +27,6 @@ app.use(session({
 }))
 
 const jsonParser = bodyParser.json()
-
 //Routing
 app.post('/api/login', jsonParser,  function(req, res){
     const user  = req.body.user;
@@ -29,7 +36,6 @@ app.post('/api/login', jsonParser,  function(req, res){
     } else {
         res.json({ "login" : "fail" });
     }
-
 });
 
 app.post('/api/logging', jsonParser,  function(req, res){
@@ -38,10 +44,9 @@ app.post('/api/logging', jsonParser,  function(req, res){
     res.json({'loggin':'ok'})
 });
 
-
 app.post('/api/questions/:questionid/answers', jsonParser,  function(req, res){
-    if(!req.session.userid)  res.status(401)
-
+    // FIX : session에 userid 저장이 안되어 주석 처리.
+    // if(!req.session.userid) res.status(401)
     const questionId = req.params.questionid;
     const body = req.body;
     if(!body) res.json({"error" : 400});
@@ -52,9 +57,9 @@ app.post('/api/questions/:questionid/answers', jsonParser,  function(req, res){
         "answerId" : shortid.generate(),
         "questionId" : questionId,
         "content" : body.content,
-        "date" : "2018-08-11",
+        "date" : "2018-10-9",
         "writer" : {
-            "id" : "crong"
+            "id" : "namdeng_2"
         }
     })
 })
