@@ -131,12 +131,13 @@ function delegateEventToChild(event) {
 
 function deleteAnswer({answerid}) {
   const answers = $('.answers');
+  const answerList = document.querySelectorAll('.answer');
   let nodeIndex;
-  for (let i = 0; i < answers.children.length; i++) {
-    if (answers.children[i].dataset.id === answerid) {
-      nodeIndex = i;
-    };
-  }
+  answerList.forEach((answer, index) => {
+    if (answer.dataset.id === answerid) {
+      nodeIndex = index;
+    }
+  })
   answers.removeChild(answers.children[nodeIndex]);
   alert('답변이 삭제되었습니다.')
 }
