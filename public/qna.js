@@ -116,17 +116,18 @@ function addAnswerListEvent() {
 }
 
 function delegateEventToChild(event) {
-  if (event.target.tagName === 'A') {
-    fetchManagerAsync({
-      url: event.target.href,
-      method: 'DELETE',
-      headers:{
-        'Content-Type': 'application/json'
-      },
-      callback: deleteAnswer
-    })
-    .then(() => loggingData('Delete answer'))
+  if (event.target.tagName !== 'A') {
+    return;
   }
+  fetchManagerAsync({
+    url: event.target.href,
+    method: 'DELETE',
+    headers:{
+      'Content-Type': 'application/json'
+    },
+    callback: deleteAnswer
+  })
+  .then(() => loggingData('Delete answer'))
 }
 
 function deleteAnswer({answerid}) {
@@ -153,16 +154,18 @@ function checkResponse(response) {
 }
 
 function loggingData(logType) {
-  fetch('/api/logging', {
-    method: 'POST',
-    body: JSON.stringify({logType}),
-    headers:{
-      'Content-Type': 'application/json'
-    }
-  })
-  .then(() => {
-    console.log('log: ', logType);
-  })
+  if (logType) {
+    fetch('/api/logging', {
+      method: 'POST',
+      body: JSON.stringify({logType}),
+      headers:{
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(() => {
+      console.log('log: ', logType);
+    })
+  }
 }
 
 function fetchManager({url, method, headers, body, callback}) {
