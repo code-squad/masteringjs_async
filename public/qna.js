@@ -23,7 +23,7 @@ function logIn() {
     },
     callback: renderButtonText
   })
-  .then(() => loggingData('Login'))
+  .then(logging('Login'))
 }
 
 function logOut() {
@@ -36,7 +36,7 @@ function logOut() {
     },
     callback: renderButtonText
   })
-  .then(() => loggingData('Logout'))
+  .then(logging('Logout'))
 }
 
 function renderButtonText() {
@@ -73,7 +73,7 @@ function addAnswer(content) {
     callback: appendAnswer
   })
   .then(renderAnswer)
-  .then(() => loggingData('Add answer'))
+  .then(() => logging('Add answer'))
   .catch(error => {
     console.error(error);
   })
@@ -127,7 +127,7 @@ function delegateEventToChild(event) {
     },
     callback: deleteAnswer
   })
-  .then(() => loggingData('Delete answer'))
+  .then(logging('Delete answer'))
 }
 
 function deleteAnswer({answerid}) {
@@ -153,19 +153,22 @@ function checkResponse(response) {
   }
 }
 
+function logging(logType) {
+  return new Promise((resolve, reject) => {
+    if (logType) resolve(logType);
+    else reject();
+  })
+  .then(loggingData)
+}
+
 function loggingData(logType) {
-  if (logType) {
-    fetch('/api/logging', {
-      method: 'POST',
-      body: JSON.stringify({logType}),
-      headers:{
-        'Content-Type': 'application/json'
-      }
-    })
-    .then(() => {
-      console.log('log: ', logType);
-    })
-  }
+  fetch('/api/logging', {
+    method: 'POST',
+    body: JSON.stringify({logType}),
+    headers:{
+      'Content-Type': 'application/json'
+    }
+  })
 }
 
 function fetchManager({url, method, headers, body, callback}) {
