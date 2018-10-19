@@ -144,7 +144,7 @@ function deleteAnswer({answerid}) {
 }
 
 function checkResponse(response) {
-  console.log('response:', response);
+  // console.log('response:', response);
   if (response.status === 401) {
     alert ('인증되지 않은 사용자입니다. \n로그인 후 사용해주세요.');
     return Promise.reject('인증되지 않은 사용자입니다.'); 
@@ -162,13 +162,19 @@ function logging(logType) {
 }
 
 function loggingData(logType) {
-  fetch('/api/logging', {
+  fetchManagerAsync({
+    url: '/api/logging',
     method: 'POST',
     body: JSON.stringify({logType}),
     headers:{
       'Content-Type': 'application/json'
-    }
+    },
+    callback: logResult
   })
+}
+
+function logResult(response) {
+  console.log('loggin:', response.loggin);
 }
 
 function fetchManager({url, method, headers, body, callback}) {
